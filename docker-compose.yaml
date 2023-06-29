@@ -1,0 +1,43 @@
+version: '1'
+services:
+  server:
+    container_name: server
+    restart: always
+    build: ./server
+    ports: 
+      - 3000:3000
+    networks:
+      - network
+  ml:
+    restart: always
+    build:
+      context: ./ml
+    ports:
+      - 5000:5000
+    depends_on:
+      - db
+    networks:
+      - network
+    container_name: pythonServer
+
+  db:
+    image: mysql
+    restart: always
+    container_name: database
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=my-secret-pw
+    networks:
+      - network
+    volumes:
+      - mysql-data:/var/lib/mysql
+    
+    
+
+networks:
+  network:
+    driver: bridge
+    
+volumes:
+  mysql-data:
