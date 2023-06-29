@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+    <style>
+         body{
+        background-color: gray;
+    }   
+
+        .full-box {
+          display:block;
+          position: relative;
+          width: 95vw;
+          height: 15vh;
+          background-color: rgb(72, 72, 72);
+          font-size: .8vw;
+          color: rgb(236, 236, 236);
+          margin-top: 10px;
+          
+        }
+     
+
+        .box {
+          display: flex;
+          justify-content: space-between;
+          width: 8vw;
+          height: 2vh;
+          padding: 5px;
+          margin-left: 10px;
+          background-color: rgb(190, 190, 190);
+          font-size: .8vw;
+          color: rgb(236, 236, 236);
+        }
+        
+
+        .center-div {
+            background-color: rgb(73, 73, 73);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 5vh;
+           
+        }
+
+        .center-div2 {
+            background-color: rgb(73, 73, 73);
+            display: flex;
+            align-items: center;
+            height: 5vh;
+            
+        }
+        .center-div2::before {
+            content: "";
+            position: absolute;
+            top: 5.5vh;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background-color: gray;
+        }
+
+        #boxList{
+            display: flex;
+        }
+        
+
+
+      </style>
+
+<script>
+
+
+var listOfTags = []
+var options = ["scifi", "of", "arts", "historical", "music", "power", "game", "drama", "dementia", "magic",
+ "military", "seinen", "samurai", "slice", "police", "josei", "shounen", "life", "ai", "comedy", "psychological", 
+ "ecchi", "space", "horror", "parody", "cars", "super", "school", "martial", "shoujo", "vampire", "yaoi", "harem", "romance",
+  "mecha", "adventure", "kids", "demons", "nan", "sports", "mystery", "action", "supernatural", "thriller", "fantasy"];
+var optionsOfSearching = ["Score", "Random"];
+
+
+function setUI(){
+    var div = document.createElement("div");
+    div.className = "center-div"; 
+
+    var div2 = document.createElement("div");
+    div2.className = "center-div2"; 
+
+    var input = document.createElement("input");
+    input.setAttribute("list", "options");
+    input.setAttribute("id", "searchBar");
+    input.addEventListener("change", addNewTag);
+
+    var datalist = document.createElement("datalist");
+    datalist.setAttribute("id", "options");
+
+    
+
+    options.forEach(function(option) {
+        var optionElement = document.createElement("option");
+        optionElement.setAttribute("value", option);
+        datalist.appendChild(optionElement);
+    });
+
+
+    var selectOption = document.createElement("select");
+    selectOption.setAttribute("id", "searchOption");
+ 
+
+    optionsOfSearching.forEach(function(option) {
+        var optionElement = document.createElement("option");
+        optionElement.textContent = option;
+        selectOption.appendChild(optionElement);
+    });
+
+    var buttonSend = document.createElement("button");
+    buttonSend.onclick = search;
+    buttonSend.textContent = "Check"
+
+
+    div.appendChild(selectOption);
+    div.appendChild(input);
+    div.appendChild(buttonSend);
+    div.appendChild(datalist);
+
+    var list = document.getElementById("boxList");
+    div2.appendChild(list);
+
+
+
+    document.body.appendChild(div);
+    document.body.appendChild(div2);
+
+    var list2 = document.getElementById("resultList");
+    document.body.appendChild(list2);  
+    
+}
+
+
+
+function addNewTag(){
+    var inputBox = document.getElementById("searchBar");
+    var text = inputBox.value;
+    var isInside = false
+    listOfTags.forEach(element => {
+        if(text == element){
+            isInside = true;
+        }
+    });
+
+    if(!isInside){
+        options.forEach(element => {
+        if(text == element){
+            listOfTags.push(text);
+            createBox(text);
+        }
+        });
+    }
+    console.log(listOfTags);
+    
+    //inputBox.textContent = "";
+    //Wywolaj pythona wyszukiwanie
+}
+
+function createBox(text){
+      var boxList = document.getElementById("boxList");
+      var box = document.createElement("li");
+      box.classList.add("box");
+      
+
+      var textLabel = document.createElement("label");
+      textLabel.textContent = text
+
+      var deleteButton = document.createElement("button");
+      deleteButton.textContent = "Delete";
+
+      deleteButton.addEventListener("click", function() {
+        listOfTags = listOfTags.filter(item => item !== textLabel.textContent);
+        box.parentNode.removeChild(box);
+});
+
+      
+
+      box.appendChild(textLabel);
+      box.appendChild(deleteButton);
+      
+
+      // Append the box to the box list
+      boxList.appendChild(box);
+        
+      
+
+}
+
+function search(){
+    var searchType = document.getElementById('searchOption').value;
+
+    fetch('/searchByTagsInPython', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            searchType: searchType,
+            tags: listOfTags
+        })
+    })
+  .then(response => response.json())
+  .then(data => {
+    var titles = data.array;
+    var scores = data.scores;
+    var descriptions = data.descriptions;
+    var icons = data.icons;
+    
+    var resultList = document.getElementById('resultList');
+    resultList.innerHTML = '';
+    
+    for(var i = 0; i < titles.length; i++){
+        addNewResult(icons[i], titles[i], descriptions[i], scores[i]);
+    }
+  })
+}
+
+
+function addNewResult(url, title, synopsis, score){
+    var resultList = document.getElementById("resultList");
+
+      var icon = document.createElement('img');
+      icon.src = url;
+    
+        icon.style.width = '5%';
+        icon.style.height = '90%';
+        icon.style.position = 'absolute';
+        icon.style.top = '5%';
+        icon.style.left = '1%';
+
+      var box = document.createElement("li");
+      box.classList.add("full-box");
+
+      
+
+      var textLabel = document.createElement("label");
+      textLabel.textContent = title;
+      textLabel.style.position = 'absolute';
+      textLabel.style.top = '4%';
+      textLabel.style.left = '7%';
+      textLabel.style.fontSize = '24px';
+      textLabel.style.fontWeight = 'bold'; 
+
+
+      var textLabel3 = document.createElement("label");
+      textLabel3.textContent = score;
+      textLabel3.style.position = 'relative';
+      textLabel3.style.top = '4%';
+      console.log(textLabel.width);
+      textLabel3.style.left = "85%";
+      textLabel3.style.fontSize = '24px';
+      
+
+
+      var textLabel2 = document.createElement("label");
+      textLabel2.textContent = synopsis; 
+      textLabel2.style.position = 'absolute';
+      textLabel2.style.top = '30%';
+      textLabel2.style.left = '7%';
+
+      box.appendChild(icon);
+      box.appendChild(textLabel);
+      box.appendChild(textLabel3);
+      box.appendChild(textLabel2);
+
+      
+
+      // Append the box to the box list
+      resultList.appendChild(box);
+
+}
+
+
+</script>
+<body>
+    <ul id="boxList"></ul>
+    <ul id="resultList"></ul>
+</body>
+<script>
+    setUI();
+</script>
+</html>
